@@ -1,0 +1,114 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Estrategia IPO breakouts v0.3 · reglas y resultados</title>
+<style>
+body{font:15px/1.55 system-ui,sans-serif;margin:0;background:#f6f7f9;color:#1c1f24}
+header{padding:18px 20px;background:#fff;border-bottom:1px solid #e3e6ea}
+h1{font-size:20px;margin:0 0 4px}h2{font-size:17px;margin:30px 0 8px}h3{font-size:15px;margin:18px 0 6px}
+main{padding:16px 20px 50px;max-width:940px;margin:auto}
+.card{background:#fff;border:1px solid #e3e6ea;border-radius:8px;padding:12px 16px;margin:10px 0;overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:14px}
+th,td{padding:6px 9px;border-bottom:1px solid #eef0f2;text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}.v th:nth-child(2),.v td:nth-child(2){text-align:left;white-space:normal}th{background:#fafbfc;font-weight:600}
+.pos{color:#0a7d3b}.neg{color:#b42318}.m{color:#6b7280;font-size:13px}
+.badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:13px;background:#fdecea;color:#b42318;font-weight:600}
+code{background:#eef0f2;padding:1px 5px;border-radius:4px;font-size:13px}
+li{margin:4px 0}nav a{margin-right:14px}
+</style></head><body>
+<header><h1>Estrategia «IPO breakouts» · v0.3</h1>
+<div class="m"><span class="badge">Descartada tal cual · no operar en real</span> &nbsp; Actualizado 2026-11-13 · <a href="index.html">← informes</a></div></header>
+<main>
+
+<h2>Resumen</h2>
+<div class="card">
+<p>Idea: comprar rupturas de máximos de 52 semanas en acciones de OPV reciente (menos de 5 años) con ventas creciendo, con entrada y salida por órdenes diarias en Interactive Brokers.</p>
+<p><b>Resultado:</b> con datos gratuitos (Yahoo + SEC), 1.660 valores de EE. UU. y costes realistas, la estrategia <b>no bate al índice ni gana dinero de forma estable</b>: −9,2 % en 2014–2021 (índice +94 %) y −16,6 % en 2022–2026 (índice +50 %). Los filtros que mejoraban el entrenamiento no se sostuvieron en la validación. Los datos tienen sesgo de supervivencia, así que la realidad habría sido peor.</p>
+</div>
+
+<h2>1. Reglas</h2>
+<h3>Universo (se evalúa cada día con los datos disponibles ese día)</h3>
+<div class="card"><ul>
+<li>Volumen medio diario en valor (50 sesiones) ≥ 200.000 $ · precio &gt; 7 $ · capitalización ≥ 300 M$.</li>
+<li>Más de 21 sesiones desde la salida a bolsa y menos de 5 años.</li>
+<li>Ventas del último trimestre publicado, +15 % o más frente al mismo trimestre del año anterior (con 1 día de margen tras la publicación).</li>
+<li>La posición no supera el 2 % del volumen medio diario en valor.</li>
+</ul></div>
+<h3>Señal y entrada (velas diarias; la señal se calcula al cierre y la orden actúa al día siguiente)</h3>
+<div class="card"><ul>
+<li><b>Caja de Darvas:</b> 5 sesiones con amplitud (techo−suelo)/techo ≤ 10 % y techo a menos del 3 % del máximo de 52 semanas.</li>
+<li><b>Volumen descendente:</b> media de 5 sesiones &lt; media de 50 sesiones; cierre a menos del 3 % del máximo de 52 semanas.</li>
+<li><b>Orden:</b> compra stop a máximo de 52 semanas + 0,25 %.</li>
+<li><b>Comprobación de volumen:</b> el volumen del día de entrada debe ser ≥ 1,5 × la media de las 50 sesiones anteriores; si no, venta al día siguiente en la apertura (premercado) y se vuelve a armar la orden (2 intentos y 60 sesiones de espera).</li>
+</ul></div>
+<h3>Salidas</h3>
+<div class="card"><ul>
+<li>Stop inicial al 7 % bajo el nivel de entrada, reajustado al cierre al precio real.</li>
+<li>Stop móvil: 5 % por debajo de la media móvil de 21 días; solo sube (versión inicial: 3 %).</li>
+<li>Venta del 50 % de la posición a +25 % (orden límite). Una sola venta parcial por operación, compartida con la «euforia» (3 días al alza con volumen ≥ 2× la media y subida ≥ 15 %).</li>
+</ul></div>
+<h3>Cartera y costes</h3>
+<div class="card"><ul>
+<li>10.000 € de capital, 10 % por posición (máx. 20 %), hasta 10 posiciones.</li>
+<li>Costes base: 0,005 $/acción (mín. 1 $) y 0,15 % de deslizamiento por lado. Variante «IBKR»: 0,0035 $/acción (mín. 0,35 $) y 0,10 %.</li>
+<li>Reglas de simulación: señal al cierre de t → orden en t+1; entrada en máx(apertura, nivel) + deslizamiento; stop en mín(apertura, stop) − deslizamiento; si el mismo día salta el stop y el objetivo, se asume el stop.</li>
+</ul></div>
+
+<h2>2. Datos y método</h2>
+<div class="card"><ul>
+<li><b>Fuentes gratuitas:</b> precios diarios de Yahoo Finance (sin ajustar por dividendos) y ventas trimestrales de la SEC (EDGAR), con la fecha de publicación original.</li>
+<li><b>Muestra:</b> 6.381 tickers de Nasdaq/NYSE escaneados → 3.429 con OPV reciente → 1.663 con fundamentales usables (1.660 tras excluir CNXC, WFRD y PRM, que no son OPV reales).</li>
+<li><b>Entrenamiento</b> 2014–2021 para probar variantes; <b>validación</b> 2022–2026 con los mismos parámetros, sin ajustar nada.</li>
+<li><b>Limitaciones:</b> solo valores que cotizan hoy (sesgo de supervivencia, resultados optimistas); la fecha de OPV es el primer precio de Yahoo, y escisiones, relistings y SPAC la contaminan; empresas extranjeras (20-F) fuera; capitalización de acciones con varias clases infravalorada.</li>
+</ul></div>
+
+<h2>3. Resultados</h2>
+<h3>Estrategia base v0.3</h3>
+<div class="card"><table>
+<tr><th>Periodo</th><th>Operaciones</th><th>Total</th><th>Anual</th><th>Índice</th><th>Caída máx.</th><th>% acierto</th><th>Factor beneficio</th><th>Expectativa (R)</th></tr>
+<tr><td>Completo 2014–2026</td><td>931</td><td class="neg">−25,4 %</td><td>–</td><td>–</td><td>–</td><td>–</td><td>–</td><td>–</td></tr>
+<tr><td>Entrenamiento 2014–2021</td><td>629</td><td class="neg">−9,2 %</td><td class="neg">−1,2 %</td><td>+94 % (8,7 %/año)</td><td class="neg">−13,9 %</td><td>32,6 %</td><td>0,90</td><td class="neg">−0,02</td></tr>
+<tr><td>Validación 2022–2026</td><td>303</td><td class="neg">−16,6 %</td><td class="neg">−3,7 %</td><td>+50 % (8,6 %/año)</td><td class="neg">−18,9 %</td><td>29,0 %</td><td>0,69</td><td class="neg">−0,09</td></tr>
+</table></div>
+
+<h3>Variantes: entrenamiento 2014–2021 → validación 2022–2026</h3>
+<div class="card"><table class="v">
+<tr><th>Variante</th><th>Cambio</th><th>Entrenamiento</th><th>Validación</th><th>Factor beneficio (valid.)</th></tr>
+<tr><td>base</td><td>–</td><td class="neg">−9,2 %</td><td class="neg">−16,6 %</td><td>0,69</td></tr>
+<tr><td>costes_ibkr</td><td>comisión mín. 0,35 $, deslizamiento 0,10 %</td><td class="pos">+5,5 %</td><td class="neg">−10,3 %</td><td>0,79</td></tr>
+<tr><td>adv15</td><td>liquidez mínima 15 M$/día</td><td class="pos">+2,6 %</td><td class="neg">−21,5 %</td><td>0,33</td></tr>
+<tr><td>growth50</td><td>ventas ≥ +50 %</td><td class="pos">+7,6 %</td><td class="neg">−4,4 %</td><td>0,68</td></tr>
+<tr><td>vol_min77</td><td>volumen 5 ses. ≥ 77 % del de 50 (no «demasiado seco»)</td><td class="pos">+13,8 %</td><td class="neg">−11,4 %</td><td>0,74</td></tr>
+<tr><td>combo</td><td>los tres filtros (75 y 31 operaciones)</td><td class="pos">+2,0 %</td><td class="neg">−3,1 %</td><td>0,38</td></tr>
+</table>
+<p class="m">Variantes probadas solo en entrenamiento: sin costes +24,7 % (factor de beneficio 1,30) · volumen ×1,0 −2,8 % · ×1,25 −1,2 % · sin comprobación de volumen −1,6 % · caja ≤ 20 % +3,1 % · stop de la media activado tras +10 % −9,3 % · stop de la media al 8 % −0,9 % · sin venta parcial −11,9 %.</p></div>
+
+<h3>De dónde sale el dinero (entrenamiento, 629 operaciones)</h3>
+<div class="card"><table>
+<tr><th>Grupo</th><th>Operaciones</th><th>Resultado</th><th>Media</th></tr>
+<tr><td>Venta parcial a +25 % y luego stop</td><td>27</td><td class="pos">+5.591 €</td><td class="pos">+22,6 %</td></tr>
+<tr><td>Salida por stop</td><td>94</td><td class="neg">−3.266 €</td><td class="neg">−3,7 %</td></tr>
+<tr><td>Fallo de volumen al día siguiente</td><td>501</td><td class="neg">−3.034 €</td><td class="neg">−0,66 %</td></tr>
+<tr><td>Stop el mismo día de entrada</td><td>6</td><td class="neg">−431 €</td><td class="neg">−7,5 %</td></tr>
+</table>
+<p class="m">Casi todo el beneficio sale de 27 operaciones (4 %). El 80 % de las operaciones son entradas que se cierran al día siguiente por la regla de volumen, y su coste (≈ 5 € por operación) se come la ventaja bruta.</p></div>
+
+<h2>4. Conclusiones y lecciones</h2>
+<div class="card"><ul>
+<li><b>Sin la ventaja bruta no hay nada que rescatar con costes:</b> incluso sin costes la estrategia (+2,8 % anual) queda lejos del índice (8,7 %).</li>
+<li><b>Ajustar filtros sobre los mismos años no vale:</b> lo que mejoró en entrenamiento (liquidez, volumen mínimo) falló o solo redujo pérdidas en validación. Esas mejoras venían de hacer menos operaciones, no de acertar más.</li>
+<li><b>La regla de volumen del día de entrada</b> genera muchísimas entradas y salidas de un día. En la operativa real, con control intradía (1 hora antes del cierre), quizá se evitaría parte, pero no se puede probar con datos diarios.</li>
+<li><b>El perfil es de «pocas ganadoras grandes»:</b> la ventaja, si existe, está en dejar correr unas pocas operaciones. Una muestra de 27 es demasiado pequeña para fiarse.</li>
+<li><b>Cuidado con la fecha de OPV:</b> escisiones, relistings y SPAC aparecen como OPV recientes y falsean el universo.</li>
+<li><b>Mirar muchas variables a la vez produce falsos patrones</b>; si se prueban, hay que fijar las hipótesis antes y validarlas fuera de muestra.</li>
+</ul></div>
+
+<h2>5. Qué probar a continuación (sin repetir lo anterior)</h2>
+<div class="card"><ul>
+<li><b>Universo más amplio:</b> la misma lógica de ruptura en todas las acciones líquidas de EE. UU. con ventas creciendo, no solo OPV. Más señales y test más fiable.</li>
+<li><b>Menos operaciones:</b> señales semanales o salida por tendencia (p. ej. cierre bajo la media de 50 días), sin la comprobación de volumen del día siguiente.</li>
+<li><b>Datos sin sesgo de supervivencia</b> (empresas deslistadas) antes de dar por buena cualquier ventaja.</li>
+<li><b>Otro objetivo:</b> si se buscan ingresos recurrentes, un enfoque simple (índice o dividendos) usando el bot solo como ejecutor.</li>
+</ul></div>
+
+<p class="m">Resultados históricos de pruebas con datos gratuitos. No es una recomendación de inversión.</p>
+<nav><a href="index.html">← Todos los informes</a> <a href="informes/2026-11-13-base-v0.3.html">Informe interactivo con curvas</a></nav>
+</main></body></html>
