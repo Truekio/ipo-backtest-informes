@@ -1,5 +1,5 @@
 <!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Estrategia IPO breakouts · reglas y resultados (v0.3 y v0.4)</title>
+<title>Estrategia IPO breakouts · reglas y resultados (v0.3, v0.4 y v0.5)</title>
 <style>
 body{font:15px/1.55 system-ui,sans-serif;margin:0;background:#f6f7f9;color:#1c1f24}
 header{padding:18px 20px;background:#fff;border-bottom:1px solid #e3e6ea}
@@ -14,7 +14,7 @@ th:first-child,td:first-child{text-align:left}.v th:nth-child(2),.v td:nth-child
 code{background:#eef0f2;padding:1px 5px;border-radius:4px;font-size:13px}
 li{margin:4px 0}nav a{margin-right:14px}
 </style></head><body>
-<header><h1>Estrategia «IPO breakouts» · v0.3 y v0.4</h1>
+<header><h1>Estrategia «IPO breakouts» · v0.3, v0.4 y v0.5</h1>
 <div class="m"><span class="badge">Descartada tal cual · no operar en real</span> &nbsp; Actualizado 2026-11-13 · <a href="index.html">← informes</a></div></header>
 <main>
 
@@ -23,6 +23,7 @@ li{margin:4px 0}nav a{margin-right:14px}
 <p>Idea: comprar rupturas de máximos de 52 semanas en acciones de OPV reciente (menos de 5 años) con ventas creciendo, con entrada y salida por órdenes diarias en Interactive Brokers.</p>
 <p><b>Resultado:</b> con datos gratuitos (Yahoo + SEC), 1.660 valores de EE. UU. y costes realistas, la estrategia <b>no bate al índice ni gana dinero de forma estable</b>: −9,2 % en 2014–2021 (índice +94 %) y −16,6 % en 2022–2026 (índice +50 %). Los filtros que mejoraban el entrenamiento no se sostuvieron en la validación. Los datos tienen sesgo de supervivencia, así que la realidad habría sido peor.</p>
 <p><b>v0.4</b> (sin comprobación de volumen, stop inicial 5 %, stop móvil a 10 % bajo la SMA21 tras +10 %): <b>+21,3 % en entrenamiento pero −30,3 % en validación</b>. La mejora en entrenamiento no se sostuvo fuera de muestra (ver sección 3b).</p>
+<p><b>v0.5</b> (stop inicial 5 %, breakeven a +10 %, después stop a 5 % bajo la SMA50 actualizado cada semana): <b>+15,6 % en entrenamiento y −28,2 % en validación</b>, con las 15 variantes de robustez negativas en validación (sección 3c). Tres versiones de la salida, mismo resultado: el problema está en la entrada, no en la salida.</p>
 </div>
 
 <h2>1. Reglas</h2>
@@ -111,6 +112,29 @@ li{margin:4px 0}nav a{margin-right:14px}
 <p class="m">Entrenamiento: v0.4 gana el 23,5 % de las operaciones, factor de beneficio 1,19, caída máxima −19,9 %, índice +94 %. Validación: gana el 16,8 %, factor de beneficio 0,65, caída máxima −31,8 %, índice +50 %.</p></div>
 <div class="card"><b>Lectura:</b> quitar la regla de volumen reduce mucho las operaciones (629 → 277) y mejora el entrenamiento en todas las variantes, incluso moviendo cada parámetro un ±20 %. Pero en 2022–2026 todas pierden, y la v0.4 pierde más que la v0.3. Que el resultado sea estable ante cambios de parámetros <b>en los mismos años</b> no prueba que valga fuera de ellos. Las variantes que mejor salen en entrenamiento (stop 6 %, móvil 12 %) tampoco son las mejores en validación, salvo la de 12 %, que pierde menos pero sigue en negativo.</div>
 
+<h2 id="v05">3c. Versión v0.5 (breakeven y media de 50 días)</h2>
+<div class="card"><p><b>Cambios respecto a la v0.4:</b> el stop inicial (−5 %) pasa a precio de entrada (breakeven) cuando un cierre alcanza +10 %; desde ahí sigue a la SMA de 50 días con un 5 % de margen por debajo, actualizado solo en el último cierre de cada semana, y nunca baja. Sin comprobación de volumen; venta del 50 % a +25 %. Las reglas de entrada no cambian.</p></div>
+<div class="card"><table class="v">
+<tr><th>Variante</th><th>Cambio sobre v0.5</th><th>Operaciones (entr. / valid.)</th><th>Entrenamiento 2014–2021</th><th>Validación 2022–2026</th><th>Factor beneficio (valid.)</th></tr>
+<tr><td><b>v0.5</b></td><td>–</td><td>307 / 228</td><td class="pos">+15,6 %</td><td class="neg">−28,2 %</td><td>0,66</td></tr>
+<tr><td>v0.4</td><td>SMA21, stop móvil 10 %, sin breakeven</td><td>277 / 232</td><td class="pos">+21,3 %</td><td class="neg">−30,3 %</td><td>0,65</td></tr>
+<tr><td>v0.3</td><td>con regla de volumen</td><td>629 / 303</td><td class="neg">−9,2 %</td><td class="neg">−16,6 %</td><td>0,69</td></tr>
+<tr><td>v05_ibkr</td><td>costes IBKR</td><td>311 / 229</td><td class="pos">+19,4 %</td><td class="neg">−23,3 %</td><td>0,72</td></tr>
+<tr><td>v05_stop4</td><td>stop inicial 4 %</td><td>358 / 262</td><td class="pos">+10,1 %</td><td class="neg">−19,5 %</td><td>0,76</td></tr>
+<tr><td>v05_stop6</td><td>stop inicial 6 %</td><td>272 / 205</td><td class="pos">+39,7 %</td><td class="neg">−24,0 %</td><td>0,72</td></tr>
+<tr><td>v05_be8</td><td>breakeven a +8 %</td><td>322 / 232</td><td class="pos">+10,3 %</td><td class="neg">−22,6 %</td><td>0,72</td></tr>
+<tr><td>v05_be12</td><td>breakeven a +12 %</td><td>303 / 227</td><td class="pos">+19,8 %</td><td class="neg">−25,7 %</td><td>0,70</td></tr>
+<tr><td>v05_off4</td><td>margen bajo SMA 4 %</td><td>319 / 236</td><td class="pos">+18,7 %</td><td class="neg">−27,2 %</td><td>0,68</td></tr>
+<tr><td>v05_off6</td><td>margen bajo SMA 6 %</td><td>292 / 227</td><td class="pos">+20,4 %</td><td class="neg">−28,8 %</td><td>0,65</td></tr>
+<tr><td>v05_sma40</td><td>SMA de 40</td><td>314 / 238</td><td class="pos">+23,3 %</td><td class="neg">−25,9 %</td><td>0,70</td></tr>
+<tr><td>v05_sma60</td><td>SMA de 60</td><td>286 / 225</td><td class="pos">+22,7 %</td><td class="neg">−28,6 %</td><td>0,65</td></tr>
+<tr><td>v05_daily</td><td>stop de la media diario</td><td>315 / 227</td><td class="pos">+12,0 %</td><td class="neg">−24,6 %</td><td>0,70</td></tr>
+<tr><td>v05_tp20</td><td>venta parcial a +20 %</td><td>307 / 228</td><td class="pos">+15,3 %</td><td class="neg">−26,4 %</td><td>0,68</td></tr>
+<tr><td>v05_tp30</td><td>venta parcial a +30 %</td><td>307 / 228</td><td class="pos">+17,2 %</td><td class="neg">−28,0 %</td><td>0,66</td></tr>
+</table>
+<p class="m">v0.5: en entrenamiento gana el 23,1 % de las operaciones (factor de beneficio 1,15, caída máx. −22,7 %); en validación, el 15,8 % (factor 0,66, caída máx. −28,4 %). Índice: +94 % y +50 %.</p></div>
+<div class="card"><b>Lectura:</b> la v0.5 se comporta como la v0.4. Quince variantes con la salida ligeramente distinta pierden entre −19 % y −29 % en validación. Con una entrada que acierta solo el 16 % de las veces, ninguna salida razonable lo arregla. La auditoría de las 232 operaciones de la v0.4 no encontró errores del motor: 193 perdedoras de ≈ −5,5 % (−8.675 €) frente a 39 ganadoras (+5.639 €).</div>
+
 <h2>4. Conclusiones y lecciones</h2>
 <div class="card"><ul>
 <li><b>Sin la ventaja bruta no hay nada que rescatar con costes:</b> incluso sin costes la estrategia (+2,8 % anual) queda lejos del índice (8,7 %).</li>
@@ -118,6 +142,7 @@ li{margin:4px 0}nav a{margin-right:14px}
 <li><b>La regla de volumen del día de entrada</b> genera muchísimas entradas y salidas de un día. En la operativa real, con control intradía (1 hora antes del cierre), quizá se evitaría parte, pero no se puede probar con datos diarios.</li>
 <li><b>El perfil es de «pocas ganadoras grandes»:</b> la ventaja, si existe, está en dejar correr unas pocas operaciones. Una muestra de 27 es demasiado pequeña para fiarse.</li>
 <li><b>Cuidado con la fecha de OPV:</b> escisiones, relistings y SPAC aparecen como OPV recientes y falsean el universo.</li>
+<li><b>Cambiar solo la salida no arregla una entrada débil:</b> tres versiones (v0.3, v0.4, v0.5) y 40 variantes en total dan el mismo mensaje en validación. Con ~84 % de entradas que acaban en stop, un stop del 5 % salta con el ruido normal de acciones pequeñas.</li>
 <li><b>La estabilidad ante cambios de parámetros no basta:</b> la v0.4 aguantaba ±20 % en entrenamiento (todas positivas) y aun así perdió en validación. Un régimen de mercado distinto (2022–2026) puede romper la ventaja, y esa ventana de validación ya se ha usado varias veces: para nuevas ideas hace falta datos nuevos (otro universo u otro periodo).</li>
 <li><b>Mirar muchas variables a la vez produce falsos patrones</b>; si se prueban, hay que fijar las hipótesis antes y validarlas fuera de muestra.</li>
 </ul></div>
